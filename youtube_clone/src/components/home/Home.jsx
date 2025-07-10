@@ -31,24 +31,44 @@ const getTimeAgo = (publishedAt) => {
 const Home = () => {
   const [videos, setVideos] = useState([]);
   const navigate = useNavigate();
+  const API_KEY = import.meta.env.VITE_API_KEY;
 
   useEffect(() => {
-    fetch(`data/youtube_mock.json`)
+    if (!API_KEY) return;
+    fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&chart=mostPopular&regionCode=KR&maxResults=25&key=${API_KEY}&type=video`
+    )
       .then((res) => res.json())
-      .then((data) => setVideos(data.items))
-      .catch((error) => console.error("Error fetching videos:", error));
-  }, [navigate]);
+      .then((data) => {
+        console.log("🔥 인기 영상", data.items);
+        setVideos(data.items);
+      })
+      .catch((error) => {
+        console.error("인기 영상 불러오기 실패:", error);
+      });
+  }, [API_KEY, navigate]);
 
   return (
     <>
       <ul className={styles.videoList}>
         {videos
-          .filter((video) => video.id.kind === "youtube#video")
+          // .filter((video) => video.id.kind === "youtube#video")
           .map((video) => (
             <li
-              key={video.id.videoId}
+              key={video.id}
               className={styles.videoItem}
-              onClick={() => navigate(`/video/${video.id.videoId}`)}
+              onClick={() =>
+                navigate(`/video/${video.id}`, {
+                  state: {
+                    title: decodeHTML(video.snippet.title),
+                    channelTitle: decodeHTML(video.snippet.channelTitle),
+                    publishedAt: video.snippet.publishedAt,
+                    // getTimeAgo: getTimeAgo(video.snippet.publishedAt),
+                    description: decodeHTML(video.snippet.description),
+                    videoId: video.id.videoId,
+                  },
+                })
+              }
             >
               <img
                 src={video.snippet.thumbnails.default.url}

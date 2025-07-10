@@ -25,6 +25,11 @@ const Navbar = () => {
           placeholder="Search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              handleSearch();
+            }
+          }}
         />
         <button className={styles.searchButton} onClick={handleSearch}>
           <FaSearch />

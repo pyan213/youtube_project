@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styles from "./Search.module.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const decodeHTML = (str) => {
   const txt = document.createElement("textarea");
@@ -32,6 +32,7 @@ const Search = () => {
   const [videos, setVideos] = useState([]);
   const API_KEY = import.meta.env.VITE_API_KEY;
   const { search } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetch(
@@ -41,13 +42,28 @@ const Search = () => {
       .then((data) => setVideos(data.items));
   }, [search, API_KEY]);
 
+  console.log("🔥 검색 결과", videos);
   return (
     <>
       <ul className={styles.videoList}>
         {videos
           .filter((video) => video.id.kind === "youtube#video")
           .map((video) => (
-            <li key={video.id.videoId} className={styles.videoItem}>
+            <li
+              key={video.id.videoId}
+              className={styles.videoItem}
+              onClick={() =>
+                navigate(`/video/${video.id.videoId}`, {
+                  state: {
+                    title: decodeHTML(video.snippet.title),
+                    channelTitle: decodeHTML(video.snippet.channelTitle),
+                    publishedAt: video.snippet.publishedAt,
+                    description: decodeHTML(video.snippet.description),
+                    videoId: video.id.videoId,
+                  },
+                })
+              }
+            >
               <img
                 src={video.snippet.thumbnails.default.url}
                 alt={video.snippet.title}
